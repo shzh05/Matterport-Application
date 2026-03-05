@@ -109,6 +109,11 @@ const main = async () => {
   const controls = document.getElementById('controls');
   controls.classList.add('visible'); // Trigger fade-in by adding class
 
+  // Register components
+  await mpSdk.Scene.register('path-line', () => new PathLineComponent());
+  
+  console.log('✅ Visual components registered');
+
   // Get current sweep data
   let current;
   
@@ -127,7 +132,7 @@ const main = async () => {
 
   // Create graph from scan points
   const sweepGraph = await mpSdk.Sweep.createGraph();
-  console.log("Pathfinding graph ready");
+  console.log("Pathfinding graph ready", sweepGraph);
 
   // Modify edge weights
   for (const { src, dst, weight } of sweepGraph.edges) {
@@ -139,61 +144,70 @@ const main = async () => {
     const startSid = document.getElementById('startSelect').value;
     const endSid = document.getElementById('endSelect').value;
 
+    if (!startSid || !endSid) {
+      alert('Please select both start and end locations');
+      return;
+    }
+
     if (startSid === endSid) {
       alert('Please select different start and end locations');
       return;
     }
+
+    // Get start and end sweep positions
+    const startSweep = sweepGraph.vertex(startSid);
+    const endSweep = sweepGraph.vertex(endSid);
+    console.log(sweepGraph);
+    if (!startSweep || !endSweep) {
+      console.error('Start or end sweep not found');
+      return;
+    }
+
+    // Move camera to start position
+    const rotation = { x: 30, y: -45 };
+    const transition = mpSdk.Camera.Transition.INSTANT;
+    const transitionTime = 2000; // in milliseconds
+
+    mpSdk.Sweep.moveTo(sweepId, {
+      rotation: rotation,
+      transition: transition,
+      transitionTime: transitionTime,
+    })
+    .then(function(sweepId){
+      // Move successful.
+      console.log('Arrived at sweep ' + sweepId);
+    })
+    .catch(function(error){
+      // Error with moveTo command
+    });
+
+    // Start standard pathfinding
+    const aStarRunner = mpSdk.Graph.createAStarRunner(sweepGraph, startSweep, endSweep);
+    const path = aStarRunner.exec().path;
+    console.log('Path ', path);
+
+    // Create scene object to visualize path
+    const [sceneObject] = await mpSdk.Scene.createObjects(1);
+    const node = sceneObject.addNode();
+
+    for (let i = 0; i < path.length-1; i++) {
+      const start = path[i].data.position;
+      const end = path[i+1].data.position;
+      console.log(node.addComponent);
+      // Add line component to connect this vertex to the next
+      node.addComponent('path-line', { 
+        start: start,
+        end: end
+      });
+    }
+
+    // Start the scene to make everything visible
+    node.start();
+    sceneObject.start();
+
+    sceneObject.stop();
+    sweepGraph.dispose();
   };
-
-  // Get start and end sweep positions
-  const startSweep = sweepGraph.vertex(current);
-  const endSweep = sweepGraph.vertex('10sad2qsagd94wfnf0hdw2ebd'); 
-  
-  if (!startSweep || !endSweep) {
-    console.error('Start or end sweep not found');
-    return;
-  }
-
-  
-
-  // Start standard pathfinding
-  const aStarRunner = mpSdk.Graph.createAStarRunner(sweepGraph, startSweep, endSweep);
-  const path = aStarRunner.exec().path;
-
-  aStarRunner.subscribe({
-  onChanged(runner) {
-    console.log('sweep graph has changed');
-  }
-});
-
-  console.log('Path ', path);
-
-  // Create scene object to visualize path
-  const [sceneObject] = await mpSdk.Scene.createObjects(1);
-  const node = sceneObject.addNode();
-  
-  // Register components
-  await mpSdk.Scene.register('path-line', () => new PathLineComponent());
-  
-  console.log('✅ Visual components registered');
-
-  for (let i = 0; i < path.length-1; i++) {
-    const start = path[i].data.position;
-    const end = path[i+1].data.position;
-    console.log(node.addComponent);
-    // Add line component to connect this vertex to the next
-    node.addComponent('path-line', { 
-      start: start,
-      end: end
-     });
-  }
-
-  
-  // 6. Start the scene to make everything visible
-  node.start();
-  sceneObject.start();
-
-  sweepGraph.dispose();
 };
 
 main().catch(err => console.error('Error:', err));
