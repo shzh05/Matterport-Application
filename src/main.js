@@ -139,6 +139,8 @@ const main = async () => {
     sweepGraph.setEdge({ src, dst, weight: weight ** 2 });
   }
 
+  let currentLine = null;
+
   // Onclick listener for pathfinding button
   document.getElementById('generatePath').onclick = async () => {
     const startSid = document.getElementById('startSelect').value;
@@ -165,17 +167,16 @@ const main = async () => {
 
     // Move camera to start position
     const rotation = { x: 30, y: -45 };
-    const transition = mpSdk.Camera.Transition.INSTANT;
-    const transitionTime = 2000; // in milliseconds
+    // const transition = mpSdk.Camera.Transition.INSTANT;
+    const transitionTime = 1000; // in milliseconds
 
-    mpSdk.Sweep.moveTo(sweepId, {
+    mpSdk.Sweep.moveTo(startSid, {
       rotation: rotation,
-      transition: transition,
       transitionTime: transitionTime,
     })
-    .then(function(sweepId){
+    .then(function(startSid){
       // Move successful.
-      console.log('Arrived at sweep ' + sweepId);
+      console.log('Arrived at sweep ' + startSid);
     })
     .catch(function(error){
       // Error with moveTo command
@@ -187,13 +188,18 @@ const main = async () => {
     console.log('Path ', path);
 
     // Create scene object to visualize path
+    if (currentLine) {
+      currentLine.stop();
+      currentLine = null;
+    }
     const [sceneObject] = await mpSdk.Scene.createObjects(1);
+    currentLine = sceneObject;
     const node = sceneObject.addNode();
 
     for (let i = 0; i < path.length-1; i++) {
       const start = path[i].data.position;
       const end = path[i+1].data.position;
-      console.log(node.addComponent);
+
       // Add line component to connect this vertex to the next
       node.addComponent('path-line', { 
         start: start,
@@ -204,9 +210,6 @@ const main = async () => {
     // Start the scene to make everything visible
     node.start();
     sceneObject.start();
-
-    sceneObject.stop();
-    sweepGraph.dispose();
   };
 };
 
