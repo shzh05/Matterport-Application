@@ -112,7 +112,7 @@ const main = async () => {
   // Register components
   await mpSdk.Scene.register('path-line', () => new PathLineComponent());
   
-  console.log('✅ Visual components registered');
+  console.log('Visual components registered');
 
   // Get current sweep data
   let current;
@@ -129,6 +129,28 @@ const main = async () => {
   });
 
   await mpSdk.Sweep.current.waitUntil((currentSweep) => currentSweep.id !== '');
+
+  // Get all tag information
+  mpSdk.Tag.data.subscribe({
+    onAdded(index, item, collection) {
+      // console.log('Tag added', index, item, collection);
+      if (index !== 'pqieon5NcCW') {
+        mpSdk.Tag.editOpacity(index, 0.3);
+      }
+    }
+  });
+
+  await mpSdk.Tag.data.waitUntil((collection) => {
+    return Object.values(collection).some(tag => tag.id === 'QAn4IfoTZPI');
+  });
+  await mpSdk.Mattertag.navigateToTag('QAn4IfoTZPI', mpSdk.Mattertag.Transition.FLY);
+
+  // // Change tag color and opacity to highlight it as a point of interest
+  // const highlightColour = { r: 1, g: 0.84, b: 0 }; // Gold
+  // const originalColour = { r: 1, g: 1, b: 1 }; // White
+
+  // await mpSdk.Tag.editColor('pqieon5NcCW', highlightColour);
+  // await mpSdk.Tag.editOpacity('pqieon5NcCW', 1);
 
   // Create graph from scan points
   const sweepGraph = await mpSdk.Sweep.createGraph();
