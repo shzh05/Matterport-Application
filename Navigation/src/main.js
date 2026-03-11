@@ -144,6 +144,7 @@ const main = async () => {
     return Object.values(collection).some(tag => tag.id === 'QAn4IfoTZPI');
   });
   await mpSdk.Mattertag.navigateToTag('QAn4IfoTZPI', mpSdk.Mattertag.Transition.FLY);
+  await mpSdk.Tag.editOpacity('QAn4IfoTZPI', 1);
 
   // // Change tag color and opacity to highlight it as a point of interest
   // const highlightColour = { r: 1, g: 0.84, b: 0 }; // Gold

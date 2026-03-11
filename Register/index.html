@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matterport App</title>
+  <link rel="stylesheet" href="src/style.css">
+  <script type="module" src="src/main.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <iframe id="showcase" frameborder=”0” allowfullscreen allow="vr"></iframe>
+  <div id="controls">
+    <label>Start:</label>
+    <select id="startSelect"></select>
+    <br><br>
+    <label>End:</label>
+    <select id="endSelect"></select>
+    <br><br>
+  <button id="generatePath">Go to Start & Pathfind</button>
+</div>
+</body>
+</html>
